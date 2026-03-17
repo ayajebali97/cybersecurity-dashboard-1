@@ -1,7 +1,6 @@
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 
-// Database connection
 const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -24,11 +23,9 @@ async function getConnection() {
   return pool;
 }
 
-// Helper function to verify JWT
 function verifyToken(req) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return null;
-  
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
@@ -36,7 +33,6 @@ function verifyToken(req) {
   }
 }
 
-// Simulated port scanning logic
 function simulateScan(target) {
   const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995];
   const openPorts = [];
@@ -44,12 +40,9 @@ function simulateScan(target) {
   const recommendations = [];
   let riskScore = 0;
 
-  // Randomly determine open ports
   commonPorts.forEach(port => {
     if (Math.random() > 0.6) {
       openPorts.push(port);
-      
-      // Add issues based on open ports
       if (port === 21) {
         issues.push('FTP port is open - consider using SFTP instead');
         recommendations.push('Close FTP port or use secure FTP (SFTP)');
@@ -71,22 +64,18 @@ function simulateScan(target) {
         riskScore += 1;
       }
       if (port === 443) {
-        // HTTPS is good, no issue
         recommendations.push('Ensure SSL certificate is valid and up-to-date');
       }
     }
   });
 
-  // Determine risk level
   let risk = 'LOW';
   if (riskScore >= 5) risk = 'HIGH';
   else if (riskScore >= 3) risk = 'MEDIUM';
 
-  // Add general recommendations
   if (openPorts.length > 5) {
     recommendations.push('Consider closing unnecessary ports to reduce attack surface');
   }
-  
   if (recommendations.length === 0) {
     recommendations.push('Regularly update your system and security patches');
   }
@@ -101,9 +90,7 @@ function simulateScan(target) {
   };
 }
 
-// Scan endpoint
 module.exports = async (req, res) => {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -116,7 +103,6 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verify JWT token
   const decoded = verifyToken(req);
   if (!decoded) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -124,15 +110,11 @@ module.exports = async (req, res) => {
 
   try {
     const { target } = req.body;
-
     if (!target) {
       return res.status(400).json({ error: 'Target is required' });
     }
 
-    // Perform simulated scan
     const scanResult = simulateScan(target);
-
-    // Save scan to database
     const connection = await getConnection();
     await connection.execute(
       'INSERT INTO scans (user_id, target, result) VALUES (?, ?, ?)',

@@ -2,7 +2,6 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Database connection
 const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -25,9 +24,7 @@ async function getConnection() {
   return pool;
 }
 
-// Login endpoint
 module.exports = async (req, res) => {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -42,14 +39,11 @@ module.exports = async (req, res) => {
 
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const connection = await getConnection();
-
-    // Find user
     const [users] = await connection.execute(
       'SELECT id, email, password FROM users WHERE email = ?',
       [email]
@@ -61,8 +55,6 @@ module.exports = async (req, res) => {
     }
 
     const user = users[0];
-
-    // Check password
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
@@ -70,7 +62,6 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET,
